@@ -14,7 +14,7 @@ st.set_page_config(
 )
 
 # --- RUTAS Y VARIABLES GLOBALES (Modificado para Descargas en Celular Android) ---
-ARCHIVO_EXCEL = "/storage/emulated/0/Download/PROYECCION OFICIALES.xlsx"
+ARCHIVO_EXCEL = "PROYECCION OFICIALES.xlsx"
 
 OPCIONES_COMPLEMENTACION = [
     "1. ADM. MARITIMA",
