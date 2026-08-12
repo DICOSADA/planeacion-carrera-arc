@@ -13,6 +13,14 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# --- CONTROL DE ACCESO SEGURO ---
+password = st.text_input("Ingresa la contraseña de acceso:", type="password")
+
+if password != st.secrets["PASSWORD_SECRETA"]:
+    if password != "":
+        st.error("Contraseña incorrecta. Inténtalo de nuevo.")
+    st.stop() # Detiene la carga de la aplicación hasta que se introduzca la clave correcta
+
 # --- RUTAS Y VARIABLES GLOBALES (Modificado para Descargas en Celular Android) ---
 ARCHIVO_EXCEL = "PROYECCION OFICIALES.xlsx"
 
