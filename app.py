@@ -17,9 +17,8 @@ st.set_page_config(
 password = st.text_input("Ingresa la contraseña de acceso:", type="password")
 
 if password != st.secrets["PASSWORD_SECRETA"]:
-    if password != "":
-        st.error("Contraseña incorrecta. Inténtalo de nuevo.")
-    st.stop() # Detiene la carga de la aplicación hasta que se introduzca la clave correcta
+    st.warning("Por favor, ingresa la contraseña para ver la aplicación.")
+    st.stop() # <--- Esto es lo que detiene la app para que no se vea nada más
 
 # --- RUTAS Y VARIABLES GLOBALES (Modificado para Descargas en Celular Android) ---
 ARCHIVO_EXCEL = "PROYECCION OFICIALES.xlsx"
