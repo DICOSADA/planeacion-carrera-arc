@@ -15,13 +15,28 @@ st.set_page_config(
 
 import streamlit as st
 
-# --- CONTROL DE ACCESO ---
+# --- CONTROL DE ACCESO SEGURO ---
 password = st.text_input("Ingresa la contraseña de acceso:", type="password")
 
-# Comparamos si la contraseña escrita es igual a la guardada en los secretos
-if password != st.secrets["PASSWORD_SECRETA"]:
-    st.warning("Por favor, ingresa la contraseña para ver la aplicación.")
-    st.stop() # Detiene la ejecución aquí y no muestra nada más abajo
+# Verificamos si la contraseña coincide con los secretos
+if password == st.secrets["PASSWORD_SECRETA"]:
+    
+    # ==========================================================
+    # --- TODO TU CÓDIGO ACTUAL VA AQUÍ DENTRO (INDENTADO) ---
+    # ==========================================================
+    # Por ejemplo, aquí pones tu st.set_page_config, la lectura del excel,
+    # el buscador, los menús, etc. Todo lo que hace tu app.
+    
+    st.success("¡Acceso concedido!")
+    
+    # (Aquí va el resto de tu código tal cual lo tienes)
+
+else:
+    if password != "":
+        st.error("Contraseña incorrecta.")
+    else:
+        st.info("Por favor, ingresa la contraseña para desbloquear la aplicación.")
+    st.stop()
 
 # --- RUTAS Y VARIABLES GLOBALES (Modificado para Descargas en Celular Android) ---
 ARCHIVO_EXCEL = "PROYECCION OFICIALES.xlsx"
