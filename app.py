@@ -15,21 +15,20 @@ st.set_page_config(
 
 import streamlit as st
 
-# --- CONTROL DE ACCESO ---
-# Verificamos si la contraseña NO es correcta
-if "password_correcta" not in st.session_state:
-    st.session_state["password_correcta"] = False
+# --- CONTROL DE ACCESO SEGURO ---
+if "autenticado" not in st.session_state:
+    st.session_state["autenticado"] = False
 
-if not st.session_state["password_correcta"]:
+if not st.session_state["autenticado"]:
     password = st.text_input("Ingresa la contraseña de acceso:", type="password")
     
     if password == st.secrets["PASSWORD_SECRETA"]:
-        st.session_state["password_correcta"] = True
-        st.rerun() # Recarga la página instantáneamente
+        st.session_state["autenticado"] = True
+        st.rerun()
     elif password != "":
         st.error("Contraseña incorrecta.")
     
-    st.stop() # Detiene la ejecución aquí para que NADA de la app se muestre hasta ingresar la clave
+    st.stop()
 
 else:
     if password != "":
