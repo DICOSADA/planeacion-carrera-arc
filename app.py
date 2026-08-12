@@ -13,12 +13,15 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- CONTROL DE ACCESO SEGURO ---
+import streamlit as st
+
+# --- CONTROL DE ACCESO ---
 password = st.text_input("Ingresa la contraseña de acceso:", type="password")
 
+# Comparamos si la contraseña escrita es igual a la guardada en los secretos
 if password != st.secrets["PASSWORD_SECRETA"]:
     st.warning("Por favor, ingresa la contraseña para ver la aplicación.")
-    st.stop() # <--- Esto es lo que detiene la app para que no se vea nada más
+    st.stop() # Detiene la ejecución aquí y no muestra nada más abajo
 
 # --- RUTAS Y VARIABLES GLOBALES (Modificado para Descargas en Celular Android) ---
 ARCHIVO_EXCEL = "PROYECCION OFICIALES.xlsx"
