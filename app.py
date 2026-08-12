@@ -13,8 +13,6 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-import streamlit as st
-
 # --- CONTROL DE ACCESO SEGURO ---
 if "autenticado" not in st.session_state:
     st.session_state["autenticado"] = False
@@ -29,13 +27,6 @@ if not st.session_state["autenticado"]:
         else:
             st.error("Contraseña incorrecta.")
     
-    st.stop()
-
-else:
-    if password != "":
-        st.error("Contraseña incorrecta.")
-    else:
-        st.info("Por favor, ingresa la contraseña para desbloquear la aplicación.")
     st.stop()
 
 # --- RUTAS Y VARIABLES GLOBALES (Modificado para Descargas en Celular Android) ---
