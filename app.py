@@ -15,21 +15,21 @@ st.set_page_config(
 
 import streamlit as st
 
-# --- CONTROL DE ACCESO SEGURO ---
-password = st.text_input("Ingresa la contraseña de acceso:", type="password")
+# --- CONTROL DE ACCESO ---
+# Verificamos si la contraseña NO es correcta
+if "password_correcta" not in st.session_state:
+    st.session_state["password_correcta"] = False
 
-# Verificamos si la contraseña coincide con los secretos
-if password == st.secrets["PASSWORD_SECRETA"]:
+if not st.session_state["password_correcta"]:
+    password = st.text_input("Ingresa la contraseña de acceso:", type="password")
     
-    # ==========================================================
-    # --- TODO TU CÓDIGO ACTUAL VA AQUÍ DENTRO (INDENTADO) ---
-    # ==========================================================
-    # Por ejemplo, aquí pones tu st.set_page_config, la lectura del excel,
-    # el buscador, los menús, etc. Todo lo que hace tu app.
+    if password == st.secrets["PASSWORD_SECRETA"]:
+        st.session_state["password_correcta"] = True
+        st.rerun() # Recarga la página instantáneamente
+    elif password != "":
+        st.error("Contraseña incorrecta.")
     
-    st.success("¡Acceso concedido!")
-    
-    # (Aquí va el resto de tu código tal cual lo tienes)
+    st.stop() # Detiene la ejecución aquí para que NADA de la app se muestre hasta ingresar la clave
 
 else:
     if password != "":
