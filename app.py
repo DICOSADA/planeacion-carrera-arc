@@ -20,13 +20,15 @@ if "autenticado" not in st.session_state:
     st.session_state["autenticado"] = False
 
 if not st.session_state["autenticado"]:
-    password = st.text_input("Ingresa la contraseña de acceso:", type="password")
+    # Creamos la variable password asegurándonos de que nunca sea nula
+    password = st.text_input("Ingresa la contraseña de acceso:", type="password", value="")
     
-    if password == st.secrets["PASSWORD_SECRETA"]:
-        st.session_state["autenticado"] = True
-        st.rerun()
-    elif password != "":
-        st.error("Contraseña incorrecta.")
+    if password:
+        if password == st.secrets["PASSWORD_SECRETA"]:
+            st.session_state["autenticado"] = True
+            st.rerun()
+        else:
+            st.error("Contraseña incorrecta.")
     
     st.stop()
 
