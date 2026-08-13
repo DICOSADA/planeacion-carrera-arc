@@ -13,26 +13,22 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- OCULTAR ELEMENTOS DE LA UI DE STREAMLIT Y BOTÓN DE GESTIÓN ---
+# --- OCULTAR ELEMENTOS DE LA UI DE STREAMLIT ---
 st.markdown("""
     <style>
-    /* Oculta la barra superior derecha y herramientas */
     header [data-testid="stToolbar"] {
         display: none !important;
     }
     #MainMenu {
         visibility: hidden !important;
     }
-    /* Oculta completamente la barra flotante inferior y el botón de Gestionar la aplicación */
     div[data-testid="stAppToolbar"],
     .stAppToolbar,
     .stAppDeployButton,
-    iframe[data-testid="stIframe"] + div,
     footer {
         display: none !important;
         visibility: hidden !important;
         opacity: 0 !important;
-        pointer-events: none !important;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -100,7 +96,7 @@ def calcular_proximos_ascensos(grado_actual, fecha_ascenso_str):
 @st.cache_data(ttl=600)
 def cargar_base_datos_web():
     if not os.path.exists(ARCHIVO_EXCEL):
-        return None, f"❌ Archivo Excel no encontrado en la ruta: {ARCHIVO_EXCEL}. Asegúrate de descargarlo en la carpeta Descargas de tu celular."
+        return None, f"❌ Archivo Excel no encontrado en la ruta: {ARCHIVO_EXCEL}."
     
     try:
         wb = load_workbook(ARCHIVO_EXCEL, data_only=True)
@@ -223,7 +219,7 @@ if datos[0] is None:
 
 base_oficiales, anios_disponibles, unidades_disponibles, lista_grados, lista_siglas, lista_esp, lista_uni = datos
 
-# --- MENÚ DE NAVEGACIÓN SEGURO USANDO RADIO BUTTON HORIZONTAL ---
+# --- MENÚ DE NAVEGACIÓN ---
 menu = st.radio(
     "Seleccione una opción de navegación:",
     ["🔍 Buscador", "📋 Filtros", "📊 Estadísticas", "⚓ Embarque"],
