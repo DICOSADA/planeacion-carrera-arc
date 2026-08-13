@@ -25,22 +25,6 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# --- CONTROL DE ACCESO SEGURO ---
-if "autenticado" not in st.session_state:
-    st.session_state["autenticado"] = False
-
-if not st.session_state["autenticado"]:
-    clave_ingresada = st.text_input("Ingresa la contraseña de acceso:", type="password", key="input_clave_segura")
-    
-    if clave_ingresada:
-        if clave_ingresada == st.secrets["PASSWORD_SECRETA"]:
-            st.session_state["autenticado"] = True
-            st.rerun()
-        else:
-            st.error("Contraseña incorrecta.")
-    
-    st.stop()
-
 # --- RUTAS Y VARIABLES GLOBALES ---
 ARCHIVO_EXCEL = "PROYECCION OFICIALES.xlsx"
 
@@ -88,7 +72,7 @@ def calcular_proximos_ascensos(grado_actual, fecha_ascenso_str):
 @st.cache_data(ttl=600)
 def cargar_base_datos_web():
     if not os.path.exists(ARCHIVO_EXCEL):
-        return None, f"❌ Archivo Excel no encontrado en la ruta: {ARCHIVO_EXCEL}. Asegúrate de descargarlo en la carpeta Descargas de tu celular."
+        return None, f"❌ Archivo Excel no encontrado en la ruta: {ARCHIVO_EXCEL}. Asegúrate de descargarlo en la carpeta correspondiente."
     
     try:
         wb = load_workbook(ARCHIVO_EXCEL, data_only=True)
@@ -201,7 +185,26 @@ def cargar_base_datos_web():
     except Exception as e:
         return None, f"❌ Error: {str(e)}"
 
-# --- INTERFAZ WEB STREAMLIT ---
+# --- CONTROL DE ACCESO SEGURO ---
+if "autenticado" not in st.session_state:
+    st.session_state["autenticado"] = False
+
+if not st.session_state["autenticado"]:
+    st.title("⚓ Sistema de Planeación y Gestión de Carrera ARC")
+    clave_ingresada = st.text_input("Ingresa la contraseña de acceso:", type="password", key="input_clave_segura")
+    
+    if clave_ingresada:
+        try:
+            if clave_ingresada == st.secrets["PASSWORD_SECRETA"]:
+                st.session_state["autenticado"] = True
+                st.rerun()
+            else:
+                st.error("Contraseña incorrecta.")
+        except Exception:
+            st.error("Configuración de secretos faltante en Streamlit Cloud.")
+    st.stop()
+
+# --- INTERFAZ PRINCIPAL (SOLO SI ESTÁ AUTENTICADO) ---
 st.title("⚓ Sistema de Planeación y Gestión de Carrera ARC")
 
 datos = cargar_base_datos_web()
@@ -211,12 +214,11 @@ if datos[0] is None:
 
 base_oficiales, anios_disponibles, unidades_disponibles, lista_grados, lista_siglas, lista_esp, lista_uni = datos
 
-# --- MENÚ DE NAVEGACIÓN SEGURO USANDO RADIO BUTTON HORIZONTAL ---
-menu = st.radio(
+# --- MENÚ DE NAVEGACIÓN SEGURO USANDO SELECTBOX PARA MÁXIMA ESTABILIDAD EN MÓVIL ---
+menu = st.selectbox(
     "Seleccione una opción de navegación:",
     ["🔍 Buscador", "📋 Filtros", "📊 Estadísticas", "⚓ Embarque"],
-    horizontal=True,
-    label_visibility="collapsed"
+    key="menu_principal_selectbox"
 )
 
 st.markdown("---")
