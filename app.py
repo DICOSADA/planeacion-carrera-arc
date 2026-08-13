@@ -159,7 +159,10 @@ def cargar_base_datos_web():
             for col_idx, (semestre, ano) in columnas_proyeccion.items():
                 valor_celda = str(hoja.cell(row=fila, column=col_idx).value or "").strip()
                 if valor_celda and valor_celda != "None" and valor_celda != "✓":
-                    if valor_celda == "CEM":
+                    # Verificación específica para la columna K (columna 11)
+                    if col_idx == 11 and valor_celda == "R":
+                        texto_final = "Curso Realizado"
+                    elif valor_celda == "CEM":
                         texto_final = f"Curso de Estado Mayor ({ano})"
                         cursos_por_periodo.add((valor_celda, semestre, ano))
                     elif valor_celda == "COMPLE":
