@@ -16,16 +16,35 @@ st.set_page_config(
 # --- OCULTAR BOTONES SUPERIORES (SHARE, GITHUB, EDIT, ETC.) ---
 st.markdown("""
     <style>
+    /* Oculta los botones de la barra superior derecha (Share, Star, Edit, GitHub) */
     header [data-testid="stToolbar"] {
         display: none !important;
     }
+    /* Oculta la barra de menú desplegable superior por completo si se desea, 
+       o deja solo el menú principal de los 3 puntos configurándolo abajo */
     #MainMenu {
         visibility: visible !important;
     }
     </style>
 """, unsafe_allow_html=True)
 
-# --- RUTAS Y VARIABLES GLOBALES ---
+# --- CONTROL DE ACCESO SEGURO ---
+if "autenticado" not in st.session_state:
+    st.session_state["autenticado"] = False
+
+if not st.session_state["autenticado"]:
+    clave_ingresada = st.text_input("Ingresa la contraseña de acceso:", type="password")
+    
+    if clave_ingresada:
+        if clave_ingresada == st.secrets["PASSWORD_SECRETA"]:
+            st.session_state["autenticado"] = True
+            st.rerun()
+        else:
+            st.error("Contraseña incorrecta.")
+    
+    st.stop()
+
+# --- RUTAS Y VARIABLES GLOBALES (Modificado para Descargas en Celular Android) ---
 ARCHIVO_EXCEL = "PROYECCION OFICIALES.xlsx"
 
 OPCIONES_COMPLEMENTACION = [
@@ -72,7 +91,7 @@ def calcular_proximos_ascensos(grado_actual, fecha_ascenso_str):
 @st.cache_data(ttl=600)
 def cargar_base_datos_web():
     if not os.path.exists(ARCHIVO_EXCEL):
-        return None, f"❌ Archivo Excel no encontrado en la ruta: {ARCHIVO_EXCEL}. Asegúrate de descargarlo en la carpeta correspondiente."
+        return None, f"❌ Archivo Excel no encontrado en la ruta: {ARCHIVO_EXCEL}. Asegúrate de descargarlo en la carpeta Descargas de tu celular."
     
     try:
         wb = load_workbook(ARCHIVO_EXCEL, data_only=True)
@@ -118,6 +137,7 @@ def cargar_base_datos_web():
             celda_g = hoja.cell(row=fila, column=7)
             e = str(celda_g.value or "").strip()
             
+            # --- LÓGICA DE EVALUACIÓN DE COLOR Y TEXTO PARA COLUMNA G ---
             estado_complementacion = ""
             ya_complemento = False
             
@@ -135,17 +155,11 @@ def cargar_base_datos_web():
                     estado_complementacion = ""
             
             proyeccion_individual, cursos_por_periodo = [], set()
-            condiciones_detectadas = []
             
             for col_idx, (semestre, ano) in columnas_proyeccion.items():
-                valor_celda_raw = hoja.cell(row=fila, column=col_idx).value
-                valor_celda = str(valor_celda_raw or "").strip()
-                valor_sin_espacios = valor_celda.replace(" ", "").upper()
-                
+                valor_celda = str(hoja.cell(row=fila, column=col_idx).value or "").strip()
                 if valor_celda and valor_celda != "None" and valor_celda != "✓":
-                    if col_idx == 11 and valor_celda == "R":
-                        texto_final = "Curso Realizado"
-                    elif valor_celda == "CEM":
+                    if valor_celda == "CEM":
                         texto_final = f"Curso de Estado Mayor ({ano})"
                         cursos_por_periodo.add((valor_celda, semestre, ano))
                     elif valor_celda == "COMPLE":
@@ -162,11 +176,7 @@ def cargar_base_datos_web():
                     else:
                         texto_final = f"{valor_celda} ({semestre} {ano})"
                     proyeccion_individual.append(texto_final)
-                
-                condiciones_validas_check = {"EMB6", "EMB1", "EMB11/2", "EMB2", "MANDO6", "MANDO1", "MANDO11/2", "MANDO2"}
-                if any(cond in valor_sin_espacios for cond in condiciones_validas_check):
-                    condiciones_detectadas.append(valor_celda)
-
+            
             if g: grados.add(g)
             if s: siglas.add(s)
             if e: especialidades.add(e)
@@ -178,33 +188,13 @@ def cargar_base_datos_web():
                 "cedula": cedula, "antiguedad": antiguedad, "grado": g, "esp_sigla": s, "nombres": nombres,
                 "especialidad": e, "unidad": u, "depende": dep, "ascenso": fecha_limpia,
                 "estado_comple": estado_complementacion, "ya_complemento": ya_complemento,
-                "proyeccion": proyeccion_individual, "cursos_periodo": cursos_por_periodo,
-                "condiciones_embarque": condiciones_detectadas
+                "proyeccion": proyeccion_individual, "cursos_periodo": cursos_por_periodo
             }
         return base_oficiales, anios_disponibles, unidades_disponibles, sorted(list(grados)), sorted(list(siglas)), sorted(list(especialidades)), sorted(list(unidades))
     except Exception as e:
         return None, f"❌ Error: {str(e)}"
 
-# --- CONTROL DE ACCESO SEGURO ---
-if "autenticado" not in st.session_state:
-    st.session_state["autenticado"] = False
-
-if not st.session_state["autenticado"]:
-    st.title("⚓ Sistema de Planeación y Gestión de Carrera ARC")
-    clave_ingresada = st.text_input("Ingresa la contraseña de acceso:", type="password", key="input_clave_segura")
-    
-    if clave_ingresada:
-        try:
-            if clave_ingresada == st.secrets["PASSWORD_SECRETA"]:
-                st.session_state["autenticado"] = True
-                st.rerun()
-            else:
-                st.error("Contraseña incorrecta.")
-        except Exception:
-            st.error("Configuración de secretos faltante en Streamlit Cloud.")
-    st.stop()
-
-# --- INTERFAZ PRINCIPAL (SOLO SI ESTÁ AUTENTICADO) ---
+# --- INTERFAZ WEB STREAMLIT ---
 st.title("⚓ Sistema de Planeación y Gestión de Carrera ARC")
 
 datos = cargar_base_datos_web()
@@ -214,19 +204,11 @@ if datos[0] is None:
 
 base_oficiales, anios_disponibles, unidades_disponibles, lista_grados, lista_siglas, lista_esp, lista_uni = datos
 
-# --- MENÚ DE NAVEGACIÓN SEGURO USANDO SELECTBOX PARA MÁXIMA ESTABILIDAD EN MÓVIL ---
-menu = st.selectbox(
-    "Seleccione una opción de navegación:",
-    ["🔍 Buscador", "📋 Filtros", "📊 Estadísticas", "⚓ Embarque"],
-    key="menu_principal_selectbox"
-)
+menu = st.sidebar.selectbox("Navegación", ["🔍 Buscador Individual", "📋 Filtros Masivos", "📊 Estadísticas", "⚓ Embarque y Mando"])
 
-st.markdown("---")
-
-# --- SECCIÓN 1: BUSCADOR INDIVIDUAL ---
-if menu == "🔍 Buscador":
+if menu == "🔍 Buscador Individual":
     st.subheader("Buscador Individual de Oficial")
-    criterio = st.text_input("Ingrese Cédula o Apellidos:", key="input_buscador_individual").strip()
+    criterio = st.text_input("Ingrese Cédula o Apellidos:").strip()
     
     if criterio:
         oficial = None
@@ -258,16 +240,15 @@ if menu == "🔍 Buscador":
         else:
             st.warning("❌ No se encontró ningún oficial con ese criterio.")
 
-# --- SECCIÓN 2: FILTROS MASIVOS ---
-elif menu == "📋 Filtros":
+elif menu == "📋 Filtros Masivos":
     st.subheader("Filtros Masivos de Oficiales")
     c1, c2, c3 = st.columns(3)
     with c1:
-        f_grado = st.selectbox("Grado", ["TODOS"] + lista_grados, key="filtro_grado_masivo")
+        f_grado = st.selectbox("Grado", ["TODOS"] + lista_grados)
     with c2:
-        f_sigla = st.selectbox("Sigla", ["TODOS"] + lista_siglas, key="filtro_sigla_masivo")
+        f_sigla = st.selectbox("Sigla", ["TODOS"] + lista_siglas)
     with c3:
-        f_unidad = st.selectbox("Unidad", ["TODOS"] + lista_uni, key="filtro_unidad_masivo")
+        f_unidad = st.selectbox("Unidad", ["TODOS"] + lista_uni)
         
     resultados = []
     for ced, ofi in base_oficiales.items():
@@ -289,10 +270,9 @@ elif menu == "📋 Filtros":
         } for o in resultados])
         st.dataframe(df_res, use_container_width=True)
 
-# --- SECCIÓN 3: ESTADÍSTICAS ---
 elif menu == "📊 Estadísticas":
     st.subheader("📊 Panel Estadístico")
-    tipo_stat = st.selectbox("Indicador", ["Cursos Básicos", "Cursos de Comando", "Carga por Unidad (Top 10)"], key="select_estadistica_tipo")
+    tipo_stat = st.selectbox("Indicador", ["Cursos Básicos", "Cursos de Comando", "Carga por Unidad (Top 10)"])
     
     conteo = {}
     for ofi in base_oficiales.values():
@@ -312,27 +292,32 @@ elif menu == "📊 Estadísticas":
     else:
         st.warning("No hay datos suficientes para graficar.")
 
-# --- SECCIÓN 4: EMBARQUE Y MANDO ---
-elif menu == "⚓ Embarque":
+elif menu == "⚓ Embarque y Mando":
     st.subheader("Oficiales con Requerimientos de Embarque y Mando")
+    condiciones_validas = {"EMB6", "EMB1", "EMB11/2", "EMB2", "MANDO6", "MANDO1", "MANDO11/2", "MANDO2"}
     
     tripulantes = []
-    for ced, ofi in base_oficiales.items():
-        if ofi["condiciones_embarque"]:
-            tripulantes.append({
-                "Grado": ofi["grado"],
-                "Sigla": ofi["esp_sigla"],
-                "Cédula": ofi["cedula"],
-                "Nombres": ofi["nombres"],
-                "Unidad": ofi["unidad"],
-                "Condición": ", ".join(ofi["condiciones_embarque"])
-            })
-            
+    wb = load_workbook(ARCHIVO_EXCEL, data_only=True)
+    hoja = wb.active
+    for fila in range(8, hoja.max_row + 1):
+        cedula = str(hoja.cell(row=fila, column=5).value or "").strip()
+        if not cedula or cedula == "CEDULA": continue
+        for col_idx in range(11, 73):
+            val_celda = str(hoja.cell(row=fila, column=col_idx).value or "").strip().replace(" ", "")
+            if any(cond in val_celda for cond in condiciones_validas):
+                tripulantes.append({
+                    "Grado": hoja.cell(row=fila, column=3).value,
+                    "Sigla": hoja.cell(row=fila, column=4).value,
+                    "Cédula": cedula,
+                    "Nombres": hoja.cell(row=fila, column=6).value,
+                    "Unidad": hoja.cell(row=fila, column=8).value,
+                    "Condición": val_celda
+                })
+                break
     if tripulantes:
-        st.write(f"**Total de oficiales con requerimientos:** {len(tripulantes)}")
         st.dataframe(pd.DataFrame(tripulantes), use_container_width=True)
     else:
         st.success("No hay oficiales pendientes por embarque o mando.")
 
-st.markdown("---")
-st.markdown("by S1 PEÑA DIEGO")
+st.sidebar.markdown("---")
+st.sidebar.markdown("by S1 PEÑA DIEGO")
