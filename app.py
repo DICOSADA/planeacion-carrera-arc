@@ -13,6 +13,21 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# --- OCULTAR BOTONES SUPERIORES (SHARE, GITHUB, EDIT, ETC.) ---
+st.markdown("""
+    <style>
+    /* Oculta los botones de la barra superior derecha (Share, Star, Edit, GitHub) */
+    header [data-testid="stToolbar"] {
+        display: none !important;
+    }
+    /* Oculta la barra de menú desplegable superior por completo si se desea, 
+       o deja solo el menú principal de los 3 puntos configurándolo abajo */
+    #MainMenu {
+        visibility: visible !important;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
 # --- CONTROL DE ACCESO SEGURO ---
 if "autenticado" not in st.session_state:
     st.session_state["autenticado"] = False
@@ -122,7 +137,7 @@ def cargar_base_datos_web():
             celda_g = hoja.cell(row=fila, column=7)
             e = str(celda_g.value or "").strip()
             
-            # --- NUEVA LÓGICA DE EVALUACIÓN DE COLOR Y TEXTO PARA COLUMNA G ---
+            # --- LÓGICA DE EVALUACIÓN DE COLOR Y TEXTO PARA COLUMNA G ---
             estado_complementacion = ""
             ya_complemento = False
             
@@ -131,7 +146,6 @@ def cargar_base_datos_web():
                 if celda_g.font and celda_g.font.color and celda_g.font.color.rgb:
                     color_rgb = str(celda_g.font.color.rgb).lower()
                 
-                # Si no tiene color definido o es negro (000000), no se le coloca nada
                 if "ff0000" in color_rgb:
                     estado_complementacion = " (No ha complementado)"
                 elif "00b050" in color_rgb:
@@ -139,7 +153,6 @@ def cargar_base_datos_web():
                     estado_complementacion = " (Ya complemento)"
                 elif "000000" in color_rgb or not color_rgb:
                     estado_complementacion = ""
-            # -----------------------------------------------------------------
             
             proyeccion_individual, cursos_por_periodo = [], set()
             
