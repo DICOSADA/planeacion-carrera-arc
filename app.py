@@ -158,6 +158,12 @@ def cargar_base_datos_web():
             
             for col_idx, (semestre, ano) in columnas_proyeccion.items():
                 valor_celda = str(hoja.cell(row=fila, column=col_idx).value or "").strip()
+                
+                # --- NUEVA VALIDACIÓN PARA LA COLUMNA K (col_idx == 11) ---
+                if col_idx == 11 and valor_celda.upper() == "R":
+                    proyeccion_individual.append("Curso Realizado")
+                    continue
+                
                 if valor_celda and valor_celda != "None" and valor_celda != "✓":
                     if valor_celda == "CEM":
                         texto_final = f"Curso de Estado Mayor ({ano})"
@@ -238,7 +244,7 @@ if menu == "🔍 Buscador Individual":
                     for g_prox, f_prox in proximos:
                         st.info(f"{g_prox} - Fecha estimada: {f_prox}")
         else:
-            st.warning("❌ No se encontró ningún oficial con ese criterio.")
+                    st.warning("❌ No se encontró ningún oficial con ese criterio.")
 
 elif menu == "📋 Filtros Masivos":
     st.subheader("Filtros Masivos de Oficiales")
