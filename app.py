@@ -30,7 +30,7 @@ if "autenticado" not in st.session_state:
     st.session_state["autenticado"] = False
 
 if not st.session_state["autenticado"]:
-    clave_ingresada = st.text_input("Ingresa la contraseña de acceso:", type="password")
+    clave_ingresada = st.text_input("Ingresa la contraseña de acceso:", type="password", key="input_clave_segura")
     
     if clave_ingresada:
         if clave_ingresada == st.secrets["PASSWORD_SECRETA"]:
@@ -151,9 +151,13 @@ def cargar_base_datos_web():
                     estado_complementacion = ""
             
             proyeccion_individual, cursos_por_periodo = [], set()
+            condiciones_detectadas = []
             
             for col_idx, (semestre, ano) in columnas_proyeccion.items():
-                valor_celda = str(hoja.cell(row=fila, column=col_idx).value or "").strip()
+                valor_celda_raw = hoja.cell(row=fila, column=col_idx).value
+                valor_celda = str(valor_celda_raw or "").strip()
+                valor_sin_espacios = valor_celda.replace(" ", "").upper()
+                
                 if valor_celda and valor_celda != "None" and valor_celda != "✓":
                     if col_idx == 11 and valor_celda == "R":
                         texto_final = "Curso Realizado"
@@ -174,7 +178,12 @@ def cargar_base_datos_web():
                     else:
                         texto_final = f"{valor_celda} ({semestre} {ano})"
                     proyeccion_individual.append(texto_final)
-            
+                
+                # Evaluar condiciones de embarque o mando para la sección dedicada
+                condiciones_validas_check = {"EMB6", "EMB1", "EMB11/2", "EMB2", "MANDO6", "MANDO1", "MANDO11/2", "MANDO2"}
+                if any(cond in valor_sin_espacios for cond in condiciones_validas_check):
+                    condiciones_detectadas.append(valor_celda)
+
             if g: grados.add(g)
             if s: siglas.add(s)
             if e: especialidades.add(e)
@@ -186,7 +195,8 @@ def cargar_base_datos_web():
                 "cedula": cedula, "antiguedad": antiguedad, "grado": g, "esp_sigla": s, "nombres": nombres,
                 "especialidad": e, "unidad": u, "depende": dep, "ascenso": fecha_limpia,
                 "estado_comple": estado_complementacion, "ya_complemento": ya_complemento,
-                "proyeccion": proyeccion_individual, "cursos_periodo": cursos_por_periodo
+                "proyeccion": proyeccion_individual, "cursos_periodo": cursos_por_periodo,
+                "condiciones_embarque": condiciones_detectadas
             }
         return base_oficiales, anios_disponibles, unidades_disponibles, sorted(list(grados)), sorted(list(siglas)), sorted(list(especialidades)), sorted(list(unidades))
     except Exception as e:
@@ -202,32 +212,37 @@ if datos[0] is None:
 
 base_oficiales, anios_disponibles, unidades_disponibles, lista_grados, lista_siglas, lista_esp, lista_uni = datos
 
-# --- MENÚ DE NAVEGACIÓN PRINCIPAL (VISIBLE EN MÓVIL Y PC) ---
-st.markdown("### Seleccione una opción:")
-m1, m2, m3, m4 = st.columns(4)
-
+# --- MENÚ DE NAVEGACIÓN PRINCIPAL (AISLADO Y LIMPIO) ---
 if "menu_activo" not in st.session_state:
     st.session_state["menu_activo"] = "🔍 Buscador"
 
+st.markdown("### Seleccione una opción:")
+m1, m2, m3, m4 = st.columns(4)
+
 with m1:
-    if st.button("🔍 Buscador", use_container_width=True):
+    if st.button("🔍 Buscador", use_container_width=True, key="btn_nav_buscador"):
         st.session_state["menu_activo"] = "🔍 Buscador"
+        st.rerun()
 with m2:
-    if st.button("📋 Filtros", use_container_width=True):
+    if st.button("📋 Filtros", use_container_width=True, key="btn_nav_filtros"):
         st.session_state["menu_activo"] = "📋 Filtros"
+        st.rerun()
 with m3:
-    if st.button("📊 Estadísticas", use_container_width=True):
+    if st.button("📊 Estadísticas", use_container_width=True, key="btn_nav_stats"):
         st.session_state["menu_activo"] = "📊 Estadísticas"
+        st.rerun()
 with m4:
-    if st.button("⚓ Embarque", use_container_width=True):
+    if st.button("⚓ Embarque", use_container_width=True, key="btn_nav_embarque"):
         st.session_state["menu_activo"] = "⚓ Embarque"
+        st.rerun()
 
 menu = st.session_state["menu_activo"]
 st.markdown("---")
 
+# --- SECCIÓN 1: BUSCADOR INDIVIDUAL ---
 if menu == "🔍 Buscador":
     st.subheader("Buscador Individual de Oficial")
-    criterio = st.text_input("Ingrese Cédula o Apellidos:").strip()
+    criterio = st.text_input("Ingrese Cédula o Apellidos:", key="input_buscador_individual").strip()
     
     if criterio:
         oficial = None
@@ -259,15 +274,16 @@ if menu == "🔍 Buscador":
         else:
             st.warning("❌ No se encontró ningún oficial con ese criterio.")
 
+# --- SECCIÓN 2: FILTROS MASIVOS ---
 elif menu == "📋 Filtros":
     st.subheader("Filtros Masivos de Oficiales")
     c1, c2, c3 = st.columns(3)
     with c1:
-        f_grado = st.selectbox("Grado", ["TODOS"] + lista_grados)
+        f_grado = st.selectbox("Grado", ["TODOS"] + lista_grados, key="filtro_grado_masivo")
     with c2:
-        f_sigla = st.selectbox("Sigla", ["TODOS"] + lista_siglas)
+        f_sigla = st.selectbox("Sigla", ["TODOS"] + lista_siglas, key="filtro_sigla_masivo")
     with c3:
-        f_unidad = st.selectbox("Unidad", ["TODOS"] + lista_uni)
+        f_unidad = st.selectbox("Unidad", ["TODOS"] + lista_uni, key="filtro_unidad_masivo")
         
     resultados = []
     for ced, ofi in base_oficiales.items():
@@ -289,9 +305,10 @@ elif menu == "📋 Filtros":
         } for o in resultados])
         st.dataframe(df_res, use_container_width=True)
 
+# --- SECCIÓN 3: ESTADÍSTICAS ---
 elif menu == "📊 Estadísticas":
     st.subheader("📊 Panel Estadístico")
-    tipo_stat = st.selectbox("Indicador", ["Cursos Básicos", "Cursos de Comando", "Carga por Unidad (Top 10)"])
+    tipo_stat = st.selectbox("Indicador", ["Cursos Básicos", "Cursos de Comando", "Carga por Unidad (Top 10)"], key="select_estadistica_tipo")
     
     conteo = {}
     for ofi in base_oficiales.values():
@@ -311,37 +328,27 @@ elif menu == "📊 Estadísticas":
     else:
         st.warning("No hay datos suficientes para graficar.")
 
+# --- SECCIÓN 4: EMBARQUE Y MANDO ---
 elif menu == "⚓ Embarque":
     st.subheader("Oficiales con Requerimientos de Embarque y Mando")
-    condiciones_validas = {"EMB6", "EMB1", "EMB11/2", "EMB2", "MANDO6", "MANDO1", "MANDO11/2", "MANDO2"}
     
     tripulantes = []
-    wb = load_workbook(ARCHIVO_EXCEL, data_only=True)
-    hoja = wb.active
-    for fila in range(8, hoja.max_row + 1):
-        cedula = str(hoja.cell(row=fila, column=5).value or "").strip()
-        if not cedula or cedula == "CEDULA": continue
-        for col_idx in range(11, 73):
-            val_celda = str(hoja.cell(row=fila, column=col_idx).value or "").strip().replace(" ", "")
-            if any(cond in val_celda for cond in condiciones_validas):
-                tripulantes.append({
-                    "Grado": hoja.cell(row=fila, column=3).value,
-                    "Sigla": hoja.cell(row=fila, column=4).value,
-                    "Cédula": cedula,
-                    "Nombres": hoja.cell(row=fila, column=6).value,
-                    "Unidad": hoja.cell(row=fila, column=8).value,
-                    "Condición": val_celda
-                })
-                break
+    for ced, ofi in base_oficiales.items():
+        if ofi["condiciones_embarque"]:
+            tripulantes.append({
+                "Grado": ofi["grado"],
+                "Sigla": ofi["esp_sigla"],
+                "Cédula": ofi["cedula"],
+                "Nombres": ofi["nombres"],
+                "Unidad": ofi["unidad"],
+                "Condición": ", ".join(ofi["condiciones_embarque"])
+            })
+            
     if tripulantes:
+        st.write(f"**Total de oficiales con requerimientos:** {len(tripulantes)}")
         st.dataframe(pd.DataFrame(tripulantes), use_container_width=True)
     else:
         st.success("No hay oficiales pendientes por embarque o mando.")
 
 st.markdown("---")
 st.markdown("by S1 PEÑA DIEGO")
-
-                    
-
-        
-  
