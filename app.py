@@ -179,7 +179,6 @@ def cargar_base_datos_web():
                         texto_final = f"{valor_celda} ({semestre} {ano})"
                     proyeccion_individual.append(texto_final)
                 
-                # Evaluar condiciones de embarque o mando para la sección dedicada
                 condiciones_validas_check = {"EMB6", "EMB1", "EMB11/2", "EMB2", "MANDO6", "MANDO1", "MANDO11/2", "MANDO2"}
                 if any(cond in valor_sin_espacios for cond in condiciones_validas_check):
                     condiciones_detectadas.append(valor_celda)
@@ -212,31 +211,14 @@ if datos[0] is None:
 
 base_oficiales, anios_disponibles, unidades_disponibles, lista_grados, lista_siglas, lista_esp, lista_uni = datos
 
-# --- MENÚ DE NAVEGACIÓN PRINCIPAL (AISLADO Y LIMPIO) ---
-if "menu_activo" not in st.session_state:
-    st.session_state["menu_activo"] = "🔍 Buscador"
+# --- MENÚ DE NAVEGACIÓN SEGURO USANDO RADIO BUTTON HORIZONTAL ---
+menu = st.radio(
+    "Seleccione una opción de navegación:",
+    ["🔍 Buscador", "📋 Filtros", "📊 Estadísticas", "⚓ Embarque"],
+    horizontal=True,
+    label_visibility="collapsed"
+)
 
-st.markdown("### Seleccione una opción:")
-m1, m2, m3, m4 = st.columns(4)
-
-with m1:
-    if st.button("🔍 Buscador", use_container_width=True, key="btn_nav_buscador"):
-        st.session_state["menu_activo"] = "🔍 Buscador"
-        st.rerun()
-with m2:
-    if st.button("📋 Filtros", use_container_width=True, key="btn_nav_filtros"):
-        st.session_state["menu_activo"] = "📋 Filtros"
-        st.rerun()
-with m3:
-    if st.button("📊 Estadísticas", use_container_width=True, key="btn_nav_stats"):
-        st.session_state["menu_activo"] = "📊 Estadísticas"
-        st.rerun()
-with m4:
-    if st.button("⚓ Embarque", use_container_width=True, key="btn_nav_embarque"):
-        st.session_state["menu_activo"] = "⚓ Embarque"
-        st.rerun()
-
-menu = st.session_state["menu_activo"]
 st.markdown("---")
 
 # --- SECCIÓN 1: BUSCADOR INDIVIDUAL ---
