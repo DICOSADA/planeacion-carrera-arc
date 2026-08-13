@@ -16,9 +16,12 @@ st.set_page_config(
 # --- OCULTAR BOTONES SUPERIORES (SHARE, GITHUB, EDIT, ETC.) ---
 st.markdown("""
     <style>
+    /* Oculta los botones de la barra superior derecha (Share, Star, Edit, GitHub) */
     header [data-testid="stToolbar"] {
         display: none !important;
     }
+    /* Oculta la barra de menú desplegable superior por completo si se desea, 
+       o deja solo el menú principal de los 3 puntos configurándolo abajo */
     #MainMenu {
         visibility: visible !important;
     }
@@ -41,7 +44,7 @@ if not st.session_state["autenticado"]:
     
     st.stop()
 
-# --- RUTAS Y VARIABLES GLOBALES ---
+# --- RUTAS Y VARIABLES GLOBALES (Modificado para Descargas en Celular Android) ---
 ARCHIVO_EXCEL = "PROYECCION OFICIALES.xlsx"
 
 OPCIONES_COMPLEMENTACION = [
@@ -88,7 +91,7 @@ def calcular_proximos_ascensos(grado_actual, fecha_ascenso_str):
 @st.cache_data(ttl=600)
 def cargar_base_datos_web():
     if not os.path.exists(ARCHIVO_EXCEL):
-        return None, f"❌ Archivo Excel no encontrado en la ruta: {ARCHIVO_EXCEL}."
+        return None, f"❌ Archivo Excel no encontrado en la ruta: {ARCHIVO_EXCEL}. Asegúrate de descargarlo en la carpeta Descargas de tu celular."
     
     try:
         wb = load_workbook(ARCHIVO_EXCEL, data_only=True)
@@ -134,6 +137,7 @@ def cargar_base_datos_web():
             celda_g = hoja.cell(row=fila, column=7)
             e = str(celda_g.value or "").strip()
             
+            # --- LÓGICA DE EVALUACIÓN DE COLOR Y TEXTO PARA COLUMNA G ---
             estado_complementacion = ""
             ya_complemento = False
             
@@ -150,17 +154,10 @@ def cargar_base_datos_web():
                 elif "000000" in color_rgb or not color_rgb:
                     estado_complementacion = ""
             
-            proyeccion_individual = []
-            cursos_por_periodo = set()
+            proyeccion_individual, cursos_por_periodo = [], set()
             
             for col_idx, (semestre, ano) in columnas_proyeccion.items():
                 valor_celda = str(hoja.cell(row=fila, column=col_idx).value or "").strip()
-                
-                # Validación estricta para la columna K (Columna 11)
-                if col_idx == 11 and valor_celda.upper() == "R":
-                    proyeccion_individual.append("Curso Realizado")
-                    continue
-                
                 if valor_celda and valor_celda != "None" and valor_celda != "✓":
                     if valor_celda == "CEM":
                         texto_final = f"Curso de Estado Mayor ({ano})"
@@ -194,8 +191,8 @@ def cargar_base_datos_web():
                 "proyeccion": proyeccion_individual, "cursos_periodo": cursos_por_periodo
             }
         return base_oficiales, anios_disponibles, unidades_disponibles, sorted(list(grados)), sorted(list(siglas)), sorted(list(especialidades)), sorted(list(unidades))
-    except Exception as err:
-        return None, f"❌ Error: {str(err)}"
+    except Exception as e:
+        return None, f"❌ Error: {str(e)}"
 
 # --- INTERFAZ WEB STREAMLIT ---
 st.title("⚓ Sistema de Planeación y Gestión de Carrera ARC")
