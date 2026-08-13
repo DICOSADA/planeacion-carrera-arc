@@ -122,12 +122,25 @@ def cargar_base_datos_web():
             celda_g = hoja.cell(row=fila, column=7)
             e = str(celda_g.value or "").strip()
             
+            # --- NUEVA LÓGICA DE EVALUACIÓN DE COLOR Y TEXTO PARA COLUMNA G ---
+            estado_complementacion = ""
             ya_complemento = False
-            if celda_g.font and celda_g.font.color and celda_g.font.color.rgb:
-                if "00b050" in str(celda_g.font.color.rgb).lower():
-                    ya_complemento = True
             
-            estado_complementacion = " (Ya complemento)" if ya_complemento else " (No ha complementado)"
+            if e in OPCIONES_COMPLEMENTACION:
+                color_rgb = ""
+                if celda_g.font and celda_g.font.color and celda_g.font.color.rgb:
+                    color_rgb = str(celda_g.font.color.rgb).lower()
+                
+                # Si no tiene color definido o es negro (000000), no se le coloca nada
+                if "ff0000" in color_rgb:
+                    estado_complementacion = " (No ha complementado)"
+                elif "00b050" in color_rgb:
+                    ya_complemento = True
+                    estado_complementacion = " (Ya complemento)"
+                elif "000000" in color_rgb or not color_rgb:
+                    estado_complementacion = ""
+            # -----------------------------------------------------------------
+            
             proyeccion_individual, cursos_por_periodo = [], set()
             
             for col_idx, (semestre, ano) in columnas_proyeccion.items():
