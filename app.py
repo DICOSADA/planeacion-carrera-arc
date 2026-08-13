@@ -13,7 +13,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- OCULTAR ELEMENTOS DE LA UI DE STREAMLIT ---
+# --- OCULTAR ELEMENTOS DE LA UI Y EL BOTÓN FLOTANTE DE STREAMLIT ---
 st.markdown("""
     <style>
     header [data-testid="stToolbar"] {
@@ -22,13 +22,17 @@ st.markdown("""
     #MainMenu {
         visibility: hidden !important;
     }
-    div[data-testid="stAppToolbar"],
+    /* Oculta de forma radical cualquier botón flotante o menú de Streamlit Cloud en la esquina inferior */
+    [data-testid="stAppToolbar"],
     .stAppToolbar,
     .stAppDeployButton,
+    button[kind="header"],
+    div[class*="viewerBadge"],
     footer {
         display: none !important;
         visibility: hidden !important;
         opacity: 0 !important;
+        pointer-events: none !important;
     }
     </style>
 """, unsafe_allow_html=True)
