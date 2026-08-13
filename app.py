@@ -13,26 +13,22 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- OCULTAR ELEMENTOS DE LA UI Y EL BOTÓN FLOTANTE DE STREAMLIT ---
+# --- OCULTAR BOTONES SUPERIORES Y LA INSIGNIA FLOTANTE DE STREAMLIT (CORONA/LOGO) ---
 st.markdown("""
     <style>
     header [data-testid="stToolbar"] {
         display: none !important;
     }
     #MainMenu {
-        visibility: hidden !important;
+        visibility: visible !important;
     }
-    /* Oculta de forma radical cualquier botón flotante o menú de Streamlit Cloud en la esquina inferior */
-    [data-testid="stAppToolbar"],
-    .stAppToolbar,
-    .stAppDeployButton,
-    button[kind="header"],
-    div[class*="viewerBadge"],
-    footer {
+    /* Ocultar insignia flotante / Viewer Badge (Corona y Logo inferior) */
+    div[data-testid="stStatusWidget"],
+    .viewerBadge_container__1QSob,
+    .styles_viewerBadge__1yB5_,
+    [class*="viewerBadge"] {
         display: none !important;
         visibility: hidden !important;
-        opacity: 0 !important;
-        pointer-events: none !important;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -100,7 +96,7 @@ def calcular_proximos_ascensos(grado_actual, fecha_ascenso_str):
 @st.cache_data(ttl=600)
 def cargar_base_datos_web():
     if not os.path.exists(ARCHIVO_EXCEL):
-        return None, f"❌ Archivo Excel no encontrado en la ruta: {ARCHIVO_EXCEL}."
+        return None, f"❌ Archivo Excel no encontrado en la ruta: {ARCHIVO_EXCEL}. Asegúrate de descargarlo en la carpeta Descargas de tu celular."
     
     try:
         wb = load_workbook(ARCHIVO_EXCEL, data_only=True)
@@ -223,7 +219,7 @@ if datos[0] is None:
 
 base_oficiales, anios_disponibles, unidades_disponibles, lista_grados, lista_siglas, lista_esp, lista_uni = datos
 
-# --- MENÚ DE NAVEGACIÓN ---
+# --- MENÚ DE NAVEGACIÓN SEGURO USANDO RADIO BUTTON HORIZONTAL ---
 menu = st.radio(
     "Seleccione una opción de navegación:",
     ["🔍 Buscador", "📋 Filtros", "📊 Estadísticas", "⚓ Embarque"],
