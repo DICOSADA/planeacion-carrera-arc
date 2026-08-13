@@ -16,12 +16,9 @@ st.set_page_config(
 # --- OCULTAR BOTONES SUPERIORES (SHARE, GITHUB, EDIT, ETC.) ---
 st.markdown("""
     <style>
-    /* Oculta los botones de la barra superior derecha (Share, Star, Edit, GitHub) */
     header [data-testid="stToolbar"] {
         display: none !important;
     }
-    /* Oculta la barra de menú desplegable superior por completo si se desea, 
-       o deja solo el menú principal de los 3 puntos configurándolo abajo */
     #MainMenu {
         visibility: visible !important;
     }
@@ -44,7 +41,7 @@ if not st.session_state["autenticado"]:
     
     st.stop()
 
-# --- RUTAS Y VARIABLES GLOBALES (Modificado para Descargas en Celular Android) ---
+# --- RUTAS Y VARIABLES GLOBALES ---
 ARCHIVO_EXCEL = "PROYECCION OFICIALES.xlsx"
 
 OPCIONES_COMPLEMENTACION = [
@@ -137,7 +134,6 @@ def cargar_base_datos_web():
             celda_g = hoja.cell(row=fila, column=7)
             e = str(celda_g.value or "").strip()
             
-            # --- LÓGICA DE EVALUACIÓN DE COLOR Y TEXTO PARA COLUMNA G ---
             estado_complementacion = ""
             ya_complemento = False
             
@@ -159,7 +155,6 @@ def cargar_base_datos_web():
             for col_idx, (semestre, ano) in columnas_proyeccion.items():
                 valor_celda = str(hoja.cell(row=fila, column=col_idx).value or "").strip()
                 if valor_celda and valor_celda != "None" and valor_celda != "✓":
-                    # Verificación específica para la columna K (columna 11)
                     if col_idx == 11 and valor_celda == "R":
                         texto_final = "Curso Realizado"
                     elif valor_celda == "CEM":
@@ -207,9 +202,30 @@ if datos[0] is None:
 
 base_oficiales, anios_disponibles, unidades_disponibles, lista_grados, lista_siglas, lista_esp, lista_uni = datos
 
-menu = st.sidebar.selectbox("Navegación", ["🔍 Buscador Individual", "📋 Filtros Masivos", "📊 Estadísticas", "⚓ Embarque y Mando"])
+# --- MENÚ DE NAVEGACIÓN PRINCIPAL (VISIBLE EN MÓVIL Y PC) ---
+st.markdown("### Seleccione una opción:")
+m1, m2, m3, m4 = st.columns(4)
 
-if menu == "🔍 Buscador Individual":
+if "menu_activo" not in st.session_state:
+    st.session_state["menu_activo"] = "🔍 Buscador"
+
+with m1:
+    if st.button("🔍 Buscador", use_container_width=True):
+        st.session_state["menu_activo"] = "🔍 Buscador"
+with m2:
+    if st.button("📋 Filtros", use_container_width=True):
+        st.session_state["menu_activo"] = "📋 Filtros"
+with m3:
+    if st.button("📊 Estadísticas", use_container_width=True):
+        st.session_state["menu_activo"] = "📊 Estadísticas"
+with m4:
+    if st.button("⚓ Embarque", use_container_width=True):
+        st.session_state["menu_activo"] = "⚓ Embarque"
+
+menu = st.session_state["menu_activo"]
+st.markdown("---")
+
+if menu == "🔍 Buscador":
     st.subheader("Buscador Individual de Oficial")
     criterio = st.text_input("Ingrese Cédula o Apellidos:").strip()
     
@@ -243,7 +259,7 @@ if menu == "🔍 Buscador Individual":
         else:
             st.warning("❌ No se encontró ningún oficial con ese criterio.")
 
-elif menu == "📋 Filtros Masivos":
+elif menu == "📋 Filtros":
     st.subheader("Filtros Masivos de Oficiales")
     c1, c2, c3 = st.columns(3)
     with c1:
@@ -295,7 +311,7 @@ elif menu == "📊 Estadísticas":
     else:
         st.warning("No hay datos suficientes para graficar.")
 
-elif menu == "⚓ Embarque y Mando":
+elif menu == "⚓ Embarque":
     st.subheader("Oficiales con Requerimientos de Embarque y Mando")
     condiciones_validas = {"EMB6", "EMB1", "EMB11/2", "EMB2", "MANDO6", "MANDO1", "MANDO11/2", "MANDO2"}
     
@@ -322,5 +338,10 @@ elif menu == "⚓ Embarque y Mando":
     else:
         st.success("No hay oficiales pendientes por embarque o mando.")
 
-st.sidebar.markdown("---")
-st.sidebar.markdown("by S1 PEÑA DIEGO")
+st.markdown("---")
+st.markdown("by S1 PEÑA DIEGO")
+
+                    
+
+        
+  
