@@ -13,26 +13,26 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- OCULTAR ELEMENTOS DE LA UI DE STREAMLIT (TOOLBAR Y BOTÓN DE GESTIÓN) ---
+# --- OCULTAR ELEMENTOS DE LA UI DE STREAMLIT Y BOTÓN DE GESTIÓN ---
 st.markdown("""
     <style>
-    /* Oculta la barra superior derecha */
+    /* Oculta la barra superior derecha y herramientas */
     header [data-testid="stToolbar"] {
         display: none !important;
     }
-    /* Oculta el menú principal de los 3 puntos */
     #MainMenu {
         visibility: hidden !important;
     }
-    /* Oculta el botón flotante inferior de 'Gestionar la aplicación' / 'Manage app' */
-    div[data-testid="stAppToolbar"] {
+    /* Oculta completamente la barra flotante inferior y el botón de Gestionar la aplicación */
+    div[data-testid="stAppToolbar"],
+    .stAppToolbar,
+    .stAppDeployButton,
+    iframe[data-testid="stIframe"] + div,
+    footer {
         display: none !important;
-    }
-    button[kind="header"] {
-        display: none !important;
-    }
-    .stApp > header {
-        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
     }
     </style>
 """, unsafe_allow_html=True)
